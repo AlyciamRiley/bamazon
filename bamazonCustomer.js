@@ -12,51 +12,132 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
   if (err) throw err;
   console.log("connected as id " + connection.threadId);
-//   start();
-  promptUser();
+  start();
 });
 
+//===========start function begins============
 function start() {
+  inquirer
+    .prompt({
+      name: "listProducts",
+      type: "rawlist",
+      message: "Are you ready to shop? ",
+      choices: ["YES", "NO"]
+    })
+    .then(function(answer) {
+      if (answer.listProducts == "YES") {
+        listProducts();
+      } else {
+        console.log("Well what are you waiting for?");
+        start();
+      }
+    });
+}
+
+//===========ListProducts function begins============
+
+function listProducts() {
   connection.query(
-    "SELECT item_id, product_name, price FROM products",
+    //querys the database for the item id, name of the product
+    "SELECT item_id, stock_quantity, product_name, price FROM products",
     function(err, res) {
+      //loops through the results to pull product information- stops once it has reached the end of the list.
       for (var i = 0; i < res.length; i++) {
         console.log(
           "Item ID: " +
             res[i].item_id +
+            "\nNumber in Stock: " + res[i].stock_quantity + 
             "\nProduct: " +
             res[i].product_name +
             "\nPrice: " +
             res[i].price +
-            "\n================================="
+            "\n=================================\n\n"
         );
       }
+      promptUser();
     }
   );
 }
 
-function promptUser(){
-    inquirer
-    .prompt({
+//===========prompt user function begins============
+function promptUser() {
+  inquirer
+    .prompt([
+      {
         name: "productID",
         type: "input",
         message: "What is the ID number of the product you want to buy?"
-    })
-    .then(function(answer){
-        var query = "SELECT item_id, product_name, price FROM products WHERE ?";
-        connection.query(query, { item_id: answer.productID }, 
-        function(err, res) { 
-            for (var i = 0; i < res.length; i++) {
-                console.log(
-                  "Item ID: " +
-                    res[i].item_id +
-                    "\nProduct: " +
-                    res[i].product_name +
-                    "\nPrice: " +
-                    res[i].price +
-                    "\n================================="
-                );
+      },
+
+      {
+        name: "stockQuantity",
+        type: "input",
+        message: "How many would you like to buy?"
+      }
+    ])
+    .then(function(answer) {
+      //querys the database for all dta
+      var query = "SELECT * FROM products WHERE ?";
+      //attaches the user answer to the item_id from the database and then runs a function on that data
+      connection.query(query, { item_id: answer.productID }, function(
+        err,
+        res
+      ) {
+  
+        var unitsAvailable;
+        var unitPrice;
+        for (var i = 0; i < res.length; i++) {
+          unitsAvailable = res[i].stock_quantity;
+          unitPrice = res[i].price;
+        }
+      
+        if(answer.stockQuantity <= unitsAvailable){
+          //create variable where units requested is subtracted from units available
+          var query = "UPDATE products SET ? WHERE ?";
+          connection.query(
+            query, 
+            [
+              {
+                stock_quantity: answer.stockQuantity
+              },
+              {
+                item_id: answer.productID
               }
-        })
-    })
+            ],
+            function(err){
+              if(err){
+                console.log(err);
+              }
+              console.log("order has been placed");
+            console.log("Total for your purchase is: " + (unitPrice * answer.stockQuantity).toFixed(2));
+            shopAgain();
+            }
+            
+            
+          );
+      } else {
+          console.log("Sorry, we do not currently have enough stock to place your order.");
+          start();
+        }
+
+      });
+    });
 }
+//===========shop again function begins============
+function shopAgain() {
+  inquirer
+    .prompt({
+      name: "listProducts",
+      type: "rawlist",
+      message: "Would you like to purchase another item? ",
+      choices: ["YES", "NO"]
+    })
+    .then(function(answer) {
+      if (answer.listProducts == "YES") {
+        listProducts();
+      } else {
+        console.log("Thanks for shopping with Bamazon!");
+      }
+    });
+}
+
