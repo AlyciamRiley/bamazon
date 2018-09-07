@@ -140,13 +140,6 @@ function shopAgain() {
 }
 
 //============Manager functions================
-// * List a set of menu options:
-
-// * View Products for Sale
-
-// * View Low Inventory
-
-// * Add to Inventory
 
 // * Add New Product
 
@@ -253,7 +246,7 @@ function addInventory() {
             query,
             [
               {
-                stock_quantity: (parseInt(unitsAvailable)) + (parseInt(numAdded))
+                stock_quantity: parseInt(unitsAvailable) + parseInt(numAdded)
               },
               {
                 item_id: answer.productID
@@ -266,8 +259,50 @@ function addInventory() {
               console.log("Item has been updated");
             }
           );
-          startManager();
+          start();
         }
       });
+    });
+}
+
+function addProducts() {
+  inquirer
+    .prompt([
+      {
+        name: "productName",
+        type: "input",
+        message: "What is the name of the item you would like to add?"
+      },
+      {
+        name: "department",
+        type: "input",
+        message: "Which department does this product belong to?"
+      },
+      {
+        name: "numProduct",
+        type: "input",
+        message: "How many units would you like to add?"
+      },
+      {
+        name: "productPrice",
+        type: "input",
+        message: "How much does the product cost?"
+      }
+    ])
+    .then(function(answer) {
+      connection.query(
+        "INSERT INTO products SET ?",
+        {
+          product_name: answer.productName,
+          department_name: answer.department,
+          stock_quantity: answer.numProduct,
+          price: answer.productPrice
+        },
+        function(err) {
+          if (err) throw err;
+          console.log("Item added!");
+        }
+      );
+      start();
     });
 }
