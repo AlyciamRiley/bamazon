@@ -28,7 +28,8 @@ function start() {
       if (answer.listProducts == "Customer") {
         listProducts();
       } else {
-        startManager();2
+        startManager();
+        2;
       }
     });
 }
@@ -138,7 +139,6 @@ function shopAgain() {
     });
 }
 
-
 //============Manager functions================
 // * List a set of menu options:
 
@@ -150,29 +150,33 @@ function shopAgain() {
 
 // * Add New Product
 
-function startManager(){
-  inquirer.prompt({
-    name: "managerFunctions",
-    type: "rawlist",
-    message: "What would you like to do today?",
-    choices: ["View products", "View low inventory", "Add to Inventory", "Add new products"]
-  }).then(function(answer) {
-    if (answer.managerFunctions === "View products") {
-      viewProducts();
-    } 
-    if (answer.managerFunctions === "View low inventory")
-    {
-      lowInventory();
-    } 
-    if (answer.managerFunctions === "Add to Inventory") {
-      addInventory();
-    }
-    if (answer.managerFunctions === "Add new products") 
-    {
-      addProducts();
-    }
-  })
-
+function startManager() {
+  inquirer
+    .prompt({
+      name: "managerFunctions",
+      type: "rawlist",
+      message: "What would you like to do today?",
+      choices: [
+        "View products",
+        "View low inventory",
+        "Add to Inventory",
+        "Add new products"
+      ]
+    })
+    .then(function(answer) {
+      if (answer.managerFunctions === "View products") {
+        viewProducts();
+      }
+      if (answer.managerFunctions === "View low inventory") {
+        lowInventory();
+      }
+      if (answer.managerFunctions === "Add to Inventory") {
+        addInventory();
+      }
+      if (answer.managerFunctions === "Add new products") {
+        addProducts();
+      }
+    });
 }
 
 function viewProducts() {
@@ -194,11 +198,8 @@ function viewProducts() {
       }
       startManager();
     }
-      
   );
 }
-
-
 
 function lowInventory() {
   connection.query(
@@ -220,4 +221,53 @@ function lowInventory() {
       startManager();
     }
   );
+}
+function addInventory() {
+  inquirer
+    .prompt([
+      {
+        name: "productID",
+        type: "input",
+        message: "What is the ID number of the product you want to update?"
+      },
+      {
+        name: "stockQuantity",
+        type: "input",
+        message: "How many units would you like to add?"
+      }
+    ])
+    .then(function(answer) {
+      var query = " SELECT * FROM products WHERE ?";
+      connection.query(query, { item_id: answer.productID }, function(
+        err,
+        res
+      ) {
+        var unitsAvailable;
+        var numAdded = answer.stockQuantity;
+        for (var i = 0; i < res.length; i++) {
+          unitsAvailable = res[i].stock_quantity;
+        }
+        if (numAdded > 0) {
+          var query = "UPDATE products SET ? WHERE ?";
+          connection.query(
+            query,
+            [
+              {
+                stock_quantity: unitsAvailable + numAdded
+              },
+              {
+                item_id: answer.productID
+              }
+            ],
+            function(err) {
+              if (err) {
+                console.log(err);
+              }
+              console.log("Item has been updated");
+            }
+          );
+          startManager();
+        }
+      });
+    });
 }
