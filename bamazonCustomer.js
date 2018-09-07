@@ -21,15 +21,14 @@ function start() {
     .prompt({
       name: "listProducts",
       type: "rawlist",
-      message: "Are you ready to shop? ",
-      choices: ["YES", "NO"]
+      message: "Are you a customer or a manager? ",
+      choices: ["Customer", "Manager"]
     })
     .then(function(answer) {
-      if (answer.listProducts == "YES") {
+      if (answer.listProducts == "Customer") {
         listProducts();
       } else {
-        console.log("Well what are you waiting for?");
-        start();
+        startManager();2
       }
     });
 }
@@ -137,4 +136,88 @@ function shopAgain() {
         console.log("Thanks for shopping with Bamazon!");
       }
     });
+}
+
+
+//============Manager functions================
+// * List a set of menu options:
+
+// * View Products for Sale
+
+// * View Low Inventory
+
+// * Add to Inventory
+
+// * Add New Product
+
+function startManager(){
+  inquirer.prompt({
+    name: "managerFunctions",
+    type: "rawlist",
+    message: "What would you like to do today?",
+    choices: ["View products", "View low inventory", "Add to Inventory", "Add new products"]
+  }).then(function(answer) {
+    if (answer.managerFunctions === "View products") {
+      viewProducts();
+    } 
+    if (answer.managerFunctions === "View low inventory")
+    {
+      lowInventory();
+    } 
+    if (answer.managerFunctions === "Add to Inventory") {
+      addInventory();
+    }
+    if (answer.managerFunctions === "Add new products") 
+    {
+      addProducts();
+    }
+  })
+
+}
+
+function viewProducts() {
+  connection.query(
+    "SELECT item_id, stock_quantity, product_name, price FROM products",
+    function(err, res) {
+      for (var i = 0; i < res.length; i++) {
+        console.log(
+          "Item ID: " +
+            res[i].item_id +
+            "\nNumber in Stock: " +
+            res[i].stock_quantity +
+            "\nProduct: " +
+            res[i].product_name +
+            "\nPrice: " +
+            res[i].price +
+            "\n=================================\n\n"
+        );
+      }
+      startManager();
+    }
+      
+  );
+}
+
+
+
+function lowInventory() {
+  connection.query(
+    "SELECT item_id, stock_quantity, product_name, price FROM products WHERE stock_quantity < 2",
+    function(err, res) {
+      for (var i = 0; i < res.length; i++) {
+        console.log(
+          "Item ID: " +
+            res[i].item_id +
+            "\nNumber in Stock: " +
+            res[i].stock_quantity +
+            "\nProduct: " +
+            res[i].product_name +
+            "\nPrice: " +
+            res[i].price +
+            "\n=================================\n\n"
+        );
+      }
+      startManager();
+    }
+  );
 }
