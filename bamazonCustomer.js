@@ -253,7 +253,7 @@ function addInventory() {
             query,
             [
               {
-                stock_quantity: unitsAvailable + numAdded
+                stock_quantity: (parseInt(unitsAvailable)) + (parseInt(numAdded))
               },
               {
                 item_id: answer.productID
